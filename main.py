@@ -201,7 +201,7 @@ while True:
   if buy1() == True:
     telegram_send(buy),
     print('Buy signal 1| Waiting'),
-    countdown(300)
+    countdown(150)
     buy_df = data_fetcher()
     if buy_df['ema'].iloc[-1] > ema_1:
       telegram_send('{} Potential Up Trend'.format(stock))
@@ -210,7 +210,7 @@ while True:
   elif buy2() == True:
     telegram_send(buy),
     print('Buy signal 2| Waiting'),
-    countdown(300)
+    countdown(150)
     buy_df = data_fetcher()
     if buy_df['ema'].iloc[-1] > ema_1:
       telegram_send('{} Potential Up Trend'.format(stock))
@@ -219,7 +219,7 @@ while True:
   elif sell1() == True:
     telegram_send(sell),
     print('Sell signal 1 | Waiting'),
-    countdown(300)
+    countdown(150)
     sell_df = data_fetcher()
     if sell_df['ema'].iloc[-1] < ema_1:
       telegram_send('{} Potential Down Trend'.format(stock))
@@ -228,7 +228,7 @@ while True:
   elif sell2() == True:
     telegram_send(sell),
     print('Sell signal 2 | Waiting'),
-    countdown(300)
+    countdown(150)
     sell_df = data_fetcher()
     if sell_df['ema'].iloc[-1] < ema_1:
       telegram_send('{} Potential Down Trend'.format(stock))
