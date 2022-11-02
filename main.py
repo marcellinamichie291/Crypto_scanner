@@ -167,6 +167,16 @@ while True:
           return True
       else:
           return False
+
+  # Buy function 2
+  def buy2():
+      if (sar_3 > ema_3 and
+         sar_2 > ema_2 and
+         ema_1 > sar_1 and
+         (((close_1 - sar_1)/close_1)*100) > 0.4):
+          return True
+      else:
+          return False
   
   # Sell function 1
   def sell1():
@@ -178,24 +188,52 @@ while True:
       else:
           return False
 
+  # Sell function 2
+  def sell2():
+      if (ema_3 > sar_3 and
+         ema_2 > sar_2 and
+         sar_1 > ema_1 and
+         (((sar_1 - close_1)/sar_1)*100) > 0.4):
+          return True
+      else:
+          return False
+
   if buy1() == True:
     telegram_send(buy),
     print('Buy signal 1| Waiting'),
     countdown(300)
     buy_df = data_fetcher()
     if buy_df['close'].iloc[-1] > close_1:
-      telegram_send('Potential Up Trend')
+      telegram_send('{} Potential Up Trend'.format(stock))
     else:
-      telegram_send('Potential False Alarm')
+      telegram_send('{} Potential False Alarm'.format(stock))
+  elif buy2() == True:
+    telegram_send(buy),
+    print('Buy signal 2| Waiting'),
+    countdown(300)
+    buy_df = data_fetcher()
+    if buy_df['close'].iloc[-1] > close_1:
+      telegram_send('{} Potential Up Trend'.format(stock))
+    else:
+      telegram_send('{} Potential False Alarm'.format(stock))
   elif sell1() == True:
     telegram_send(sell),
     print('Sell signal 1 | Waiting'),
     countdown(300)
     sell_df = data_fetcher()
     if sell_df['close'].iloc[-1] < close_1:
-      telegram_send('Potential Down Trend')
+      telegram_send('{} Potential Down Trend'.format(stock))
     else:
-      telegram_send('Potential False Alarm')
+      telegram_send('{} Potential False Alarm'.format(stock))
+  elif sell2() == True:
+    telegram_send(sell),
+    print('Sell signal 2 | Waiting'),
+    countdown(300)
+    sell_df = data_fetcher()
+    if sell_df['close'].iloc[-1] < close_1:
+      telegram_send('{} Potential Down Trend'.format(stock))
+    else:
+      telegram_send('{} Potential False Alarm'.format(stock))
   else:
     print('Waiting'),
     countdown(60)
