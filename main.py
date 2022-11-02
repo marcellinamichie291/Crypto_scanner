@@ -203,7 +203,7 @@ while True:
     print('Buy signal 1| Waiting'),
     countdown(300)
     buy_df = data_fetcher()
-    if buy_df['close'].iloc[-1] > close_1:
+    if buy_df['ema'].iloc[-1] > ema_1:
       telegram_send('{} Potential Up Trend'.format(stock))
     else:
       telegram_send('{} Potential False Alarm'.format(stock))
@@ -212,7 +212,7 @@ while True:
     print('Buy signal 2| Waiting'),
     countdown(300)
     buy_df = data_fetcher()
-    if buy_df['close'].iloc[-1] > close_1:
+    if buy_df['ema'].iloc[-1] > ema_1:
       telegram_send('{} Potential Up Trend'.format(stock))
     else:
       telegram_send('{} Potential False Alarm'.format(stock))
@@ -221,7 +221,7 @@ while True:
     print('Sell signal 1 | Waiting'),
     countdown(300)
     sell_df = data_fetcher()
-    if sell_df['close'].iloc[-1] < close_1:
+    if sell_df['ema'].iloc[-1] < ema_1:
       telegram_send('{} Potential Down Trend'.format(stock))
     else:
       telegram_send('{} Potential False Alarm'.format(stock))
@@ -230,7 +230,7 @@ while True:
     print('Sell signal 2 | Waiting'),
     countdown(300)
     sell_df = data_fetcher()
-    if sell_df['close'].iloc[-1] < close_1:
+    if sell_df['ema'].iloc[-1] < ema_1:
       telegram_send('{} Potential Down Trend'.format(stock))
     else:
       telegram_send('{} Potential False Alarm'.format(stock))
