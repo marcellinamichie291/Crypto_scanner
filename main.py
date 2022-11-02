@@ -160,20 +160,20 @@ while True:
 
   # Buy function 1
   def buy1():
-      if (sar_3 > ma_3 > ema_3 and
-          sar_2 > ma_2 > ema_2 and
-          close_1 > ema_1 > ma_1 > sar_1 and
-          (((close_1 - sar_1)/close_1)*100) > 0.3):
+      if (ma_3 > ema_3 > sar_3 and
+         ma_2 > ema_2 > sar_2 and
+         close_1 > ema_1 > ma_1 > sar_1 and
+         (((close_1 - sar_1)/close_1)*100) > 0.35):
           return True
       else:
           return False
   
   # Sell function 1
   def sell1():
-      if (ema_3 > ma_3 > sar_3 and
-          ema_2 > ma_2 > sar_2 and
-          sar_1 > ma_1 > ema_1 > close_1 and
-          (((sar_1 - close_1)/sar_1)*100) > 0.3):
+      if (sar_3 > ema_3 > ma_3 and
+         sar_2 > ema_2 > ma_2 and
+         sar_1 > ma_1 > ema_1 > close_1 and
+         (((sar_1 - close_1)/sar_1)*100) > 0.35):
           return True
       else:
           return False
