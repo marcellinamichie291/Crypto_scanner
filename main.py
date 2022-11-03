@@ -146,6 +146,13 @@ while True:
     ema_3 = val_3['ema']
     ma_3 = val_3['ma']
     sar_3 = val_3['sar']
+    
+    q0 = float(data['ma'].quantile([0]))
+    q1 = float(data['ma'].quantile([0.25]))
+    q2 = float(data['ma'].quantile([0.5]))
+    q3 = float(data['ma'].quantile([0.75]))
+    q4 = float(data['ma'].quantile([1]))
+    data_mean = float(data['ma'].mean())
 
     # Variable for last price in string
     last_price = str(close_1)
@@ -188,6 +195,14 @@ while True:
         else:
             return False
     
+    # Buy confrim function
+    def buy_confirm():
+        if (ma_1 <= (q4 + (q4 * 0.1)) and ma_1 >= q4 or
+          ma_1 <= (q3 + (q3 * 0.1)) and ma_1 >= q3 or
+          ma_1 <= (q1 + (q1 * 0.1)) and ma_1 >= q1 or
+          ma_1 <= (q0 + (q0 * 0.1)) and ma_1 >= q0):
+            return True
+
     # Sell function 1
     def sell1():
         if (sar_3 > ema_3 > ma_3 and
@@ -207,40 +222,44 @@ while True:
             return True
         else:
             return False
+        
+    # Sell Confirm Functions      
+    def sell_confirm():
+        if (ma_1 >= (q4 - (q4 * 0.1)) and ma_1 <= q4 or
+        ma_1 >= (q3 - (q3 * 0.1)) and ma_1 <= q3 or
+        ma_1 >= (q1 - (q1 * 0.1)) and ma_1 <= q1 or
+        ma_1 >= (q0 - (q0 * 0.1)) and ma_1 <= q0):
+            return True
 
     if buy1() == True:
-      telegram_send(buy),
       print('Buy signal 1| Waiting'),
       countdown(150)
       buy_df = data_fetcher(symbol)
-      if buy_df['ema'].iloc[-1] > ema_1:
+      if buy_df['ema'].iloc[-1] > ema_1 and buy_confirm == True:
         telegram_send('{} Potential Up Trend'.format(symbol))
       else:
         telegram_send('{} Potential False Alarm'.format(symbol))
     elif buy2() == True:
-      telegram_send(buy),
       print('Buy signal 2| Waiting'),
       countdown(150)
       buy_df = data_fetcher(symbol)
-      if buy_df['ema'].iloc[-1] > ema_1:
+      if buy_df['ema'].iloc[-1] > ema_1 and buy_confirm == True:
         telegram_send('{} Potential Up Trend'.format(symbol))
       else:
         telegram_send('{} Potential False Alarm'.format(symbol))
     elif sell1() == True:
-      telegram_send(sell),
       print('Sell signal 1 | Waiting'),
       countdown(150)
       sell_df = data_fetcher(symbol)
-      if sell_df['ema'].iloc[-1] < ema_1:
+      if sell_df['ema'].iloc[-1] < ema_1 and sell_confirm == True:
         telegram_send('{} Potential Down Trend'.format(symbol))
       else:
         telegram_send('{} Potential False Alarm'.format(symbol))
     elif sell2() == True:
-      telegram_send(sell),
       print('Sell signal 2 | Waiting'),
       countdown(150)
       sell_df = data_fetcher(symbol)
-      if sell_df['ema'].iloc[-1] < ema_1:
+      if sell_df['ema'].iloc[-1] < ema_1 and sell_confirm == True:
         telegram_send('{} Potential Down Trend'.format(symbol))
       else:
         telegram_send('{} Potential False Alarm'.format(symbol))
