@@ -15,18 +15,6 @@ import requests
 # Technical Analysis
 import talib as ta
 
-# Assign variable for stock name
-stock = 'ETHUSDT'
-
-# datetime interval
-intv = 5
-
-# datetime interval
-interval = str(intv)+'m'
-
-# datetime interval in seconds
-ticks = 2 * 60
-
 # define the countdown func.
 def countdown(t):    
     while t:
@@ -54,9 +42,33 @@ def telegram_send(chat):
 base_url = 'https://api.binance.com'
 spot_client = client(base_url = base_url)
 
-def data_fetcher():
+def stock_list():
+  pairs = spot_client.exchange_info()
+  df = pd.DataFrame(pairs['symbols'])
+  df = df[['symbol','permissions']]
+  df = df[df['symbol'].str.contains('USDT')]
+  selection = ['MARGIN']
+  mask = df['permissions'].apply(lambda x: any(item for item in selection if item in x))
+  df1 = df[mask]
+  s_list =  list(df1["symbol"])
+  s_list = [x for x in s_list if x[-4:] == 'USDT']
+  return s_list
+
+# Assign variable for stock name
+stock = stock_list()
+
+# datetime interval
+intv = 5
+
+# datetime interval
+interval = str(intv)+'m'
+
+# datetime interval in seconds
+ticks = 2 * 60
+
+def data_fetcher(stock_name):
   # fetch the data from binance
-  crypto = spot_client.klines(stock, interval, limit=308)
+  crypto = spot_client.klines(stock_name, interval, limit=308)
 
   # Make columns names
   columns =['datetime','open','high','low','close','volume', 'close time', 'quote asset volume', 'number of trade', 'taker buy base', 'taker but', 'ignore']
@@ -95,12 +107,6 @@ def data_fetcher():
   # Make ma indicator columns
   df['ma'] = ta.MA(df['close'], 20)
 
-  # Make columns on ema & ma Interactions
-  df['gap'] = df['ema'] - df['ma']
-
-  #Convert calc columns into absolute numbers
-  df['gap'] = df['gap'].abs()
-
   # Make Parabolic SAR indicator columns
   df['sar'] = ta.SAR(df['high'], df['low'], acceleration=0.02, maximum=0.2)
 
@@ -110,130 +116,133 @@ def data_fetcher():
   return df
 
 while True:
-  # fetch the data from binance
-  data = data_fetcher()
+  for x in stock:
+    # Varible for the stock name 
+    symbol = x
+    
+    # fetch the data from binance
+    data = data_fetcher(symbol)
 
-  # Variable for close, ema, ma, sar for 1st value from last
-  val_1= data.iloc[-1]
-  close_1 = val_1['close']
-  open_1 = val_1['open']
-  ema_1 = val_1['ema']
-  ma_1 = val_1['ma']
-  sar_1 = val_1['sar']
+    # Variable for close, ema, ma, sar for 1st value from last
+    val_1= data.iloc[-1]
+    close_1 = val_1['close']
+    open_1 = val_1['open']
+    ema_1 = val_1['ema']
+    ma_1 = val_1['ma']
+    sar_1 = val_1['sar']
 
-  # Variable for close, ema, ma, sar for 2st value from last
-  val_2= data.iloc[-2]
-  close_2 = val_2['close']
-  open_2 = val_2['open']
-  ema_2 = val_2['ema']
-  ma_2 = val_2['ma']
-  sar_2 = val_2['sar']
+    # Variable for close, ema, ma, sar for 2st value from last
+    val_2= data.iloc[-2]
+    close_2 = val_2['close']
+    open_2 = val_2['open']
+    ema_2 = val_2['ema']
+    ma_2 = val_2['ma']
+    sar_2 = val_2['sar']
 
-  # Variable for close, ema, ma, sar for 3st value from last
-  val_3= data.iloc[-3]
-  close_3 = val_3['close']
-  open_3 = val_3['open']
-  ema_3 = val_3['ema']
-  ma_3 = val_3['ma']
-  sar_3 = val_3['sar']
+    # Variable for close, ema, ma, sar for 3st value from last
+    val_3= data.iloc[-3]
+    close_3 = val_3['close']
+    open_3 = val_3['open']
+    ema_3 = val_3['ema']
+    ma_3 = val_3['ma']
+    sar_3 = val_3['sar']
 
-  # Variable for last price in string
-  last_price = str(close_1)
+    # Variable for last price in string
+    last_price = str(close_1)
 
-  # Reset dataframe index
-  data = data.reset_index()
-  
-  # Last date from dataframe
-  last_date = data['datetime'].max()
-  
-  # Last Date time Offset
-  dtnext = last_date + pd.DateOffset(minutes = intv )
-  
-  # Last time offset
-  last_time = dtnext.strftime("%I:%M %p")
-  
-  # Buy name template
-  buy = 'Buy ' + stock + ' before ' + last_time + ' | last price $' + last_price
-  
-  # Sell name template
-  sell = 'Sell ' + stock + ' before ' + last_time + ' | last price $' + last_price
+    # Reset dataframe index
+    data = data.reset_index()
+    
+    # Last date from dataframe
+    last_date = data['datetime'].max()
+    
+    # Last Date time Offset
+    dtnext = last_date + pd.DateOffset(minutes = intv )
+    
+    # Last time offset
+    last_time = dtnext.strftime("%I:%M %p")
+    
+    # Buy name template
+    buy = 'Buy ' + symbol + ' before ' + last_time + ' | last price $' + last_price
+    
+    # Sell name template
+    sell = 'Sell ' + symbol + ' before ' + last_time + ' | last price $' + last_price
 
-  # Buy function 1
-  def buy1():
-      if (ma_3 > ema_3 > sar_3 and
-         ma_2 > ema_2 > sar_2 and
-         close_1 > ema_1 > ma_1 > sar_1 and
-         (((close_1 - sar_1)/close_1)*100) > 0.5):
-          return True
+    # Buy function 1
+    def buy1():
+        if (ma_3 > ema_3 > sar_3 and
+          ma_2 > ema_2 > sar_2 and
+          close_1 > ema_1 > ma_1 > sar_1 and
+          (((close_1 - sar_1)/close_1)*100) > 0.5):
+            return True
+        else:
+            return False
+
+    # Buy function 2
+    def buy2():
+        if (sar_3 > ema_3 and
+          sar_2 > ema_2 and
+          ema_1 > sar_1 and
+          (((close_1 - sar_1)/close_1)*100) > 0.75):
+            return True
+        else:
+            return False
+    
+    # Sell function 1
+    def sell1():
+        if (sar_3 > ema_3 > ma_3 and
+          sar_2 > ema_2 > ma_2 and
+          sar_1 > ma_1 > ema_1 > close_1 and
+          (((sar_1 - close_1)/sar_1)*100) > 0.5):
+            return True
+        else:
+            return False
+
+    # Sell function 2
+    def sell2():
+        if (ema_3 > sar_3 and
+          ema_2 > sar_2 and
+          sar_1 > ema_1 and
+          (((sar_1 - close_1)/sar_1)*100) > 0.75):
+            return True
+        else:
+            return False
+
+    if buy1() == True:
+      telegram_send(buy),
+      print('Buy signal 1| Waiting'),
+      countdown(150)
+      buy_df = data_fetcher(symbol)
+      if buy_df['ema'].iloc[-1] > ema_1:
+        telegram_send('{} Potential Up Trend'.format(symbol))
       else:
-          return False
-
-  # Buy function 2
-  def buy2():
-      if (sar_3 > ema_3 and
-         sar_2 > ema_2 and
-         ema_1 > sar_1 and
-         (((close_1 - sar_1)/close_1)*100) > 0.75):
-          return True
+        telegram_send('{} Potential False Alarm'.format(symbol))
+    elif buy2() == True:
+      telegram_send(buy),
+      print('Buy signal 2| Waiting'),
+      countdown(150)
+      buy_df = data_fetcher(symbol)
+      if buy_df['ema'].iloc[-1] > ema_1:
+        telegram_send('{} Potential Up Trend'.format(symbol))
       else:
-          return False
-  
-  # Sell function 1
-  def sell1():
-      if (sar_3 > ema_3 > ma_3 and
-         sar_2 > ema_2 > ma_2 and
-         sar_1 > ma_1 > ema_1 > close_1 and
-         (((sar_1 - close_1)/sar_1)*100) > 0.5):
-          return True
+        telegram_send('{} Potential False Alarm'.format(symbol))
+    elif sell1() == True:
+      telegram_send(sell),
+      print('Sell signal 1 | Waiting'),
+      countdown(150)
+      sell_df = data_fetcher(symbol)
+      if sell_df['ema'].iloc[-1] < ema_1:
+        telegram_send('{} Potential Down Trend'.format(symbol))
       else:
-          return False
-
-  # Sell function 2
-  def sell2():
-      if (ema_3 > sar_3 and
-         ema_2 > sar_2 and
-         sar_1 > ema_1 and
-         (((sar_1 - close_1)/sar_1)*100) > 0.75):
-          return True
+        telegram_send('{} Potential False Alarm'.format(symbol))
+    elif sell2() == True:
+      telegram_send(sell),
+      print('Sell signal 2 | Waiting'),
+      countdown(150)
+      sell_df = data_fetcher(symbol)
+      if sell_df['ema'].iloc[-1] < ema_1:
+        telegram_send('{} Potential Down Trend'.format(symbol))
       else:
-          return False
-
-  if buy1() == True:
-    telegram_send(buy),
-    print('Buy signal 1| Waiting'),
-    countdown(150)
-    buy_df = data_fetcher()
-    if buy_df['ema'].iloc[-1] > ema_1:
-      telegram_send('{} Potential Up Trend'.format(stock))
+        telegram_send('{} Potential False Alarm'.format(symbol))
     else:
-      telegram_send('{} Potential False Alarm'.format(stock))
-  elif buy2() == True:
-    telegram_send(buy),
-    print('Buy signal 2| Waiting'),
-    countdown(150)
-    buy_df = data_fetcher()
-    if buy_df['ema'].iloc[-1] > ema_1:
-      telegram_send('{} Potential Up Trend'.format(stock))
-    else:
-      telegram_send('{} Potential False Alarm'.format(stock))
-  elif sell1() == True:
-    telegram_send(sell),
-    print('Sell signal 1 | Waiting'),
-    countdown(150)
-    sell_df = data_fetcher()
-    if sell_df['ema'].iloc[-1] < ema_1:
-      telegram_send('{} Potential Down Trend'.format(stock))
-    else:
-      telegram_send('{} Potential False Alarm'.format(stock))
-  elif sell2() == True:
-    telegram_send(sell),
-    print('Sell signal 2 | Waiting'),
-    countdown(150)
-    sell_df = data_fetcher()
-    if sell_df['ema'].iloc[-1] < ema_1:
-      telegram_send('{} Potential Down Trend'.format(stock))
-    else:
-      telegram_send('{} Potential False Alarm'.format(stock))
-  else:
-    print('Waiting'),
-    countdown(60)
+      print('Scanning {} is done'.format(symbol))
