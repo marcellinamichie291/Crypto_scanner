@@ -147,12 +147,19 @@ while True:
     ma_3 = val_3['ma']
     sar_3 = val_3['sar']
     
+    # Quantile variable of the data
     q0 = float(data['ma'].quantile([0]))
     q1 = float(data['ma'].quantile([0.25]))
     q2 = float(data['ma'].quantile([0.5]))
     q3 = float(data['ma'].quantile([0.75]))
     q4 = float(data['ma'].quantile([1]))
     data_mean = float(data['ma'].mean())
+    
+    # Range of each quantiles  
+    q1bd = ma_1 <= q1 + (q1*0.1) and ma_1 >= q1 - (q1*0.1)
+    q0bd = ma_1 <= q0 + (q0*0.1) and ma_1 >= q0 - (q0*0.1)
+    q3bd = ma_1 <= q3 + (q3*0.1) and ma_1 >= q3 - (q3*0.1)
+    q4bd = ma_1 <= q4 + (q4*0.1) and ma_1 >= q4 - (q4*0.1)
 
     # Variable for last price in string
     last_price = str(close_1)
@@ -196,12 +203,14 @@ while True:
             return False
     
     # Buy confrim function
-    def buy_confirm():
-        if (ma_1 <= (q4 + (q4 * 0.1)) and ma_1 >= q4 or
-          ma_1 <= (q3 + (q3 * 0.1)) and ma_1 >= q3 or
-          ma_1 <= (q1 + (q1 * 0.1)) and ma_1 >= q1 or
-          ma_1 <= (q0 + (q0 * 0.1)) and ma_1 >= q0):
+    def tx_confirm():
+        if (q0bd and
+            q1bd and
+            q3bd and
+            q4bd == True):
             return True
+        else:
+          return False
 
     # Sell function 1
     def sell1():
@@ -222,46 +231,42 @@ while True:
             return True
         else:
             return False
-        
-    # Sell Confirm Functions      
-    def sell_confirm():
-        if (ma_1 >= (q4 - (q4 * 0.1)) and ma_1 <= q4 or
-        ma_1 >= (q3 - (q3 * 0.1)) and ma_1 <= q3 or
-        ma_1 >= (q1 - (q1 * 0.1)) and ma_1 <= q1 or
-        ma_1 >= (q0 - (q0 * 0.1)) and ma_1 <= q0):
-            return True
 
     if buy1() == True:
-      print('Buy signal 1| Waiting'),
+      print('Buy signal 1 for {}'.format(symbol)),
+      print('Waiting for confirmation...'),
       countdown(150)
       buy_df = data_fetcher(symbol)
-      if buy_df['ema'].iloc[-1] > ema_1 and buy_confirm == True:
-        telegram_send('{} Potential Up Trend'.format(symbol))
+      if buy_df['ema'].iloc[-1] > ema_1 and tx_confirm() == True:
+        telegram_send('Signal confirm, BUY {} Now!!!'.format(symbol))
       else:
-        telegram_send('{} Potential False Alarm'.format(symbol))
+        print('Signal not confirm')
     elif buy2() == True:
-      print('Buy signal 2| Waiting'),
+      print('Buy signal 2 for {}'.format(symbol)),
+      print('Waiting for confirmation...'),
       countdown(150)
       buy_df = data_fetcher(symbol)
-      if buy_df['ema'].iloc[-1] > ema_1 and buy_confirm == True:
-        telegram_send('{} Potential Up Trend'.format(symbol))
+      if buy_df['ema'].iloc[-1] > ema_1 and tx_confirm() == True:
+        telegram_send('Signal confirm, BUY {} Now!!!'.format(symbol))
       else:
-        telegram_send('{} Potential False Alarm'.format(symbol))
+        print('Signal not confirm')
     elif sell1() == True:
-      print('Sell signal 1 | Waiting'),
+      print('Sell signal 1 for {}'.format(symbol)),
+      print('Waiting for confirmation...'),
       countdown(150)
       sell_df = data_fetcher(symbol)
-      if sell_df['ema'].iloc[-1] < ema_1 and sell_confirm == True:
-        telegram_send('{} Potential Down Trend'.format(symbol))
+      if sell_df['ema'].iloc[-1] < ema_1 and tx_confirm() == True:
+        telegram_send('Signal confirm, SELL {} Now!!!'.format(symbol))
       else:
-        telegram_send('{} Potential False Alarm'.format(symbol))
+        print('Signal not confirm')
     elif sell2() == True:
-      print('Sell signal 2 | Waiting'),
+      print('Sell signal 2 {}'.format(symbol)),
+      print('Waiting for confirmation...'),
       countdown(150)
       sell_df = data_fetcher(symbol)
-      if sell_df['ema'].iloc[-1] < ema_1 and sell_confirm == True:
-        telegram_send('{} Potential Down Trend'.format(symbol))
+      if sell_df['ema'].iloc[-1] < ema_1 and tx_confirm() == True:
+        telegram_send('Signal confirm, SELL {} Now!!!'.format(symbol))
       else:
-        telegram_send('{} Potential False Alarm'.format(symbol))
+        print('Signal not confirm')
     else:
       print('Scanning {} is done'.format(symbol))
